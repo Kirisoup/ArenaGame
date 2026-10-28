@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Raylib-cs" Version="8.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Assets\death.wav" />
+      <EmbeddedResource Include="Assets\death.wav" />
+      <None Remove="Assets\kill.wav" />
+      <EmbeddedResource Include="Assets\kill.wav" />
+      <None Remove="Assets\shoot.wav" />
+      <EmbeddedResource Include="Assets\shoot.wav" />
+    </ItemGroup>
+</Project>
