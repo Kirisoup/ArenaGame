@@ -19,8 +19,17 @@ public record struct Shake(
         self.Timer = MathF.Max(self.Timer - dt, 0.0f);
         self.Offset = self.Dir * MathF.Sin(self.Timer / DURATION * 2 * MathF.PI) * self.Timer * 24;
     }
-    public void ShakeTowards(Vector2 dir) {
-        this.Timer = MathF.Min(this.Timer + Shake.DURATION, 4.0f);
-        this.Dir = dir;
+
+    public void HitShake(Vector2 position)
+    {
+        if (this.Timer >= DURATION) this.Timer -= (this.Timer - 1f) / 2;
+        else this.Timer = Math.Max(this.Timer + DURATION, DURATION * 1.25f);
+        this.Dir = Vector2.Normalize(Player.Val.Position - position);
+    }
+
+    public void MissedShake(Vector2 position)
+    {
+        this.Timer += 0.5f + (4 - this.Timer) / 4f;
+        this.Dir = Vector2.Normalize(position - Player.Val.Position);
     }
 }

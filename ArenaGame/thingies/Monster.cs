@@ -10,6 +10,7 @@ public partial record struct Monster(
     int Size,
     Color Color,
     int Speed,
+    bool IsObstacle,
     Monster.MonsterMovement Movement,
     Monster.FnOnHit? OnHit = null)
     : Thingy.Ticking<Monster>, Thingy.Rendering<Monster>
@@ -60,7 +61,13 @@ public partial record struct Monster(
         {
             var bullet = Bullet.Span[i];
             if (!IsPointInsideSquare(bullet.Position, (self.Position, self.Size))) continue;
-            
+
+            Player.Val.Accuracy.Total ++;
+            if (!self.IsObstacle) {
+                Player.Val.Accuracy.Hits ++;
+                Player.Val.Combo ++;
+            }
+
             Bullet.RemoveAt(i);
             i --;
             
@@ -68,34 +75,26 @@ public partial record struct Monster(
             self.OnHit?.Invoke(ref self);
 
             // hit particles
-            var particleCount = self.Health > 0 ? 2 : 10;
-            for (int j = 0; j < particleCount; j++) 
-            {
-                var angle = Raylib.GetRandomValue(0, 359) * Raylib.DEG2RAD;
-                var velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
-                velocity *= 1f + Raylib.GetRandomValue(0, 256) / 256f;
-                velocity *= 1f * Game.TARGET_FPS;
-                if (self.Health > 0) velocity += bullet.Velocity * -0.25f;
-                else velocity += bullet.Velocity * 0.5f;
-
-                Particle.Add(new Particle(
-                    bullet.Position,
-                    velocity,
-                    self.Color,
-                    Lifetime: 0.5f + Raylib.GetRandomValue(0, 256) / 256f * 1f
-                ));
-            }
+            Particle.SpawnConfetti(
+                count: self.Health > 0 ? 2 : 10,
+                color: self.Color,
+                position: bullet.Position,
+                baseSpeed: 1f * Game.TARGET_FPS,
+                externalVelocity: self.Health > 0
+                    ? bullet.Velocity * -0.25f
+                    : bullet.Velocity * 0.5f,
+                baseLifetime: 0.25f,
+                lifetimeVariation: 0.75f
+            );
 
             // Screen shake
-            if (Shake.Val.Timer >= Shake.DURATION) Shake.Val.Timer -= (Shake.Val.Timer - 1f) / 2;
-            else Shake.Val.Timer = Math.Max(Shake.Val.Timer + Shake.DURATION, Shake.DURATION * 1.25f);
-            Shake.Val.Dir = Vector2.Normalize(Player.Val.Position - self.Position);
+            if (self.IsObstacle) Shake.Val.MissedShake(self.Position);
+            else Shake.Val.HitShake(self.Position);
 
             if (self.Health <= 0)
             {
                 removeSelf = true;
-                Player.Val.Score ++;
-                Player.Val.Combo ++;
+                if (!self.IsObstacle) Player.Val.Score ++;
                 Raylib.PlaySound(Game.Instance.SoundKill);
                 break;
             }

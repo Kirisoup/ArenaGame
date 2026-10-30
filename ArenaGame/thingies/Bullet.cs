@@ -28,10 +28,9 @@ public record struct Bullet(
         removeSelf = removeSelf || self.Position.X < -SIZE / 2.0f || self.Position.X > Raylib.GetScreenWidth()  + SIZE / 2.0f;
         removeSelf = removeSelf || self.Position.Y < -SIZE / 2.0f || self.Position.Y > Raylib.GetScreenHeight() + SIZE / 2.0f;
         if (removeSelf) {
-            // Shake.Val.Timer = MathF.Min(Shake.Val.Timer + Shake.DURATION * 2f, 8.0f);
-            Shake.Val.Timer += 0.5f + (4 - Shake.Val.Timer) / 4f;
-            Shake.Val.Dir = Vector2.Normalize(self.Position - Player.Val.Position);
+            Shake.Val.MissedShake(self.Position);
             Player.Val.Combo = 0;
+            Player.Val.Accuracy.Total ++;
         }
     }
 }

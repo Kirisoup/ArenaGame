@@ -14,10 +14,21 @@ public record struct Player(
     : Thingy.Ticking.Immutable<Player>, Thingy.Rendering<Player> 
 {
     private const int SIZE = 32;
+    private const int SIZE_SMOL = 16;
     private const int SPEED_LO = 3 * Game.TARGET_FPS;
     private const int SPEED_HI = 6 * Game.TARGET_FPS;
     private const float SHOT_TIME = 0.1f;
     private static readonly Color COLOR = Color.Red;
+    
+    public AccuracyStat Accuracy; // property cannot return a reference :(
+    public record struct AccuracyStat(int Total, int Hits)
+    {
+        public readonly float Value { get {
+            var res = this.Hits / (float) this.Total;
+            if (!float.IsRealNumber(res)) res = 0f;
+            return res;
+        } }
+    }
 
     static void Thingy<Player>.Reset(Action clear)
     {
@@ -25,12 +36,12 @@ public record struct Player(
         Player.Val.Position = new(400, 300);
         Player.Val.Score = 0;
         Player.Val.Combo = 0;
+        Player.Val.Accuracy = new(0, 0);
     }
 
     static void Thingy.Rendering<Player>.Render(Player self, float dt) 
     {
-        DrawSquare(self.Position + Shake.Val.Offset, SIZE, COLOR);
-        if (self.IsLowSpeed) DrawSquare(self.Position + Shake.Val.Offset, 10, Color.White);
+        DrawSquare(self.Position + Shake.Val.Offset, self.IsLowSpeed ? SIZE_SMOL : SIZE, COLOR);
     }
 
     static void Thingy.Ticking.Immutable<Player>.Tick(ref Player self, float dt) 

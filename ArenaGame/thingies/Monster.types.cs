@@ -27,6 +27,7 @@ public partial record struct Monster
         Size: 24,
         Color.Green,
         Speed: 4 * Game.TARGET_FPS,
+        IsObstacle: false,
         MonsterMovement.Homing
     );
 
@@ -36,6 +37,7 @@ public partial record struct Monster
         Size: 32,
         Color.Orange,
         Speed: 2 * Game.TARGET_FPS,
+        IsObstacle: false,
         MonsterMovement.Homing
     );
 
@@ -45,6 +47,7 @@ public partial record struct Monster
         Size: 48,
         Color.Purple,
         Speed: 6 * Game.TARGET_FPS,
+        IsObstacle: false,
         MonsterMovement.Homing,
         OnHit: static (ref self) => {
             self.Size = 24;
@@ -58,6 +61,7 @@ public partial record struct Monster
         Size: 16,
         Color.Blue,
         Speed: 8 * Game.TARGET_FPS,
+        IsObstacle: false,
         MonsterMovement.Direct(direction)
     );
 
@@ -67,6 +71,7 @@ public partial record struct Monster
         Size: 64,
         Color.Black,
         Speed: 2 * Game.TARGET_FPS,
+        IsObstacle: true,
         MonsterMovement.Direct(direction)
     );
 }

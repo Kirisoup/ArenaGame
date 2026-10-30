@@ -108,9 +108,10 @@ public sealed class Game {
                 if (!this.paused) foreach (var tick in TICK_FNS) tick(dt);
                 foreach (var render in RENDER_FNS) render(dt);
 
-                Raylib.DrawText("Wave " + Wave.Val.Level, 10 + (int) Shake.Val.Offset.X, 10 + (int) Shake.Val.Offset.Y, 30, Color.Red);
-                Raylib.DrawText("Score: " + Player.Val.Score, 10 + (int) Shake.Val.Offset.X, 40 + (int) Shake.Val.Offset.Y, 20, Color.Black);
-                Raylib.DrawText("Combo: " + Player.Val.Combo, 10 + (int) Shake.Val.Offset.X, 60 + (int) Shake.Val.Offset.Y, 20, Color.Black);
+                Raylib.DrawText($"Wave {Wave.Val.Level}", 10 + (int) Shake.Val.Offset.X, 10 + (int) Shake.Val.Offset.Y, 30, Color.Red);
+                Raylib.DrawText($"Score: {Player.Val.Score} ", 10 + (int) Shake.Val.Offset.X, 40 + (int) Shake.Val.Offset.Y, 20, Color.Black);
+                Raylib.DrawText($"Combo: {Player.Val.Combo} ", 10 + (int) Shake.Val.Offset.X, 60 + (int) Shake.Val.Offset.Y, 20, Color.Black);
+                Raylib.DrawText($"Accuracy: {Player.Val.Accuracy.Value*100:F1}% ", 10 + (int) Shake.Val.Offset.X, 80 + (int) Shake.Val.Offset.Y, 20, Color.Black);
 
                 if (/* Raylib.IsKeyPressed(KeyboardKey.Space) || */Raylib.IsKeyPressed(KeyboardKey.Escape))
                 {
@@ -131,6 +132,8 @@ public sealed class Game {
                 
                 Raylib.DrawText("High Score: " + this.highScore, 10, 70, 20, Color.Black);
                 Raylib.DrawText("Your Score: " + Player.Val.Score, 10, 90, 20, Color.Black);
+
+                Raylib.DrawText($"Accuracy: {Player.Val.Accuracy.Value*100:F1}% ", 10, 130, 20, Color.Black);
 
                 if (Raylib.IsKeyPressed(KeyboardKey.R))
                 {
