@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ArenaGame.thingies;
+namespace ArenaGame;
 
 public interface Thingy<Self>
     where Self : struct, Thingy<Self>
