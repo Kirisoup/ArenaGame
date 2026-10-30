@@ -123,7 +123,7 @@ public readonly record struct Dynamic(Dynamic.Implementation Impl)
 
                 if (this.Timer - this.LastShot >= INTERVAL) {
                     this.Count --;
-                    this.LastShot = Timer;
+                    this.LastShot = this.Timer;
 
                     var monster = Monster.Sniper(
                         this.Pos,
