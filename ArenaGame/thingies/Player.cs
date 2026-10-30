@@ -8,7 +8,8 @@ public record struct Player(
     Vector2 Position,
     bool Dead = false,
     float ShotCooldown = 0f,
-    int Score = 0)
+    int Score = 0,
+    int Combo = 0)
     : Thingy.Ticking.Immutable<Player>, Thingy.Rendering<Player> 
 {
     static Player() => Player.Val = new(new(400, 300));

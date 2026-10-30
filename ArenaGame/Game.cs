@@ -96,6 +96,7 @@ public sealed class Game {
                 Wave.RenderAll(dt);
                 Raylib.DrawText("Wave " + Wave.Val.Level, 10 + (int) Shake.Val.Offset.X, 10 + (int) Shake.Val.Offset.Y, 30, Color.Red);
                 Raylib.DrawText("Score: " + Player.Val.Score, 10 + (int) Shake.Val.Offset.X, 40 + (int) Shake.Val.Offset.Y, 20, Color.Black);
+                Raylib.DrawText("Combo: " + Player.Val.Combo, 10 + (int) Shake.Val.Offset.X, 60 + (int) Shake.Val.Offset.Y, 20, Color.Black);
 
                 if (/* Raylib.IsKeyPressed(KeyboardKey.Space) || */Raylib.IsKeyPressed(KeyboardKey.Escape))
                 {

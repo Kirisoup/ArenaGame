@@ -95,6 +95,7 @@ public partial record struct Monster(
             {
                 removeSelf = true;
                 Player.Val.Score ++;
+                Player.Val.Combo ++;
                 Raylib.PlaySound(Game.Instance.SoundKill);
                 break;
             }
