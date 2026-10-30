@@ -70,7 +70,7 @@ public record struct Bullet(
         if (removeSelf) {
             // Shake.Val.Timer = MathF.Min(Shake.Val.Timer + Shake.DURATION * 2f, 8.0f);
             Shake.Val.Timer += 0.5f + (4 - Shake.Val.Timer) / 4f;
-            Shake.Val.Dir = Vector2.Normalize(Player.Val.Position - self.Position);
+            Shake.Val.Dir = Vector2.Normalize(self.Position - Player.Val.Position);
         }
     }
 }
