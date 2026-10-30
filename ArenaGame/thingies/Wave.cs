@@ -21,7 +21,7 @@ public record struct Wave(
         Wave.Val = Init();
     }
 
-    public static void Tick(ref Wave self, float dt)
+    static void Thingy.Ticking.Immutable<Wave>.Tick(ref Wave self, float dt)
     {
         self.Timer += dt;
         if (self.Timer >= self.Length) {
@@ -32,7 +32,7 @@ public record struct Wave(
         }
     }
 
-    public static void Render(Wave self, float dt)
+    static void Thingy.Rendering<Wave>.Render(Wave self, float dt)
     {
         var timerText = $"{self.Length - self.Timer:0.00}";
         var timerTextWidth = Raylib.MeasureText(timerText, 30);

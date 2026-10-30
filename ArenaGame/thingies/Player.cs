@@ -19,13 +19,13 @@ public record struct Player(
     private const float SHOT_TIME = 0.1f;
     private static readonly Color COLOR = Color.Red;
 
-    public static void Render(Player self, float dt) 
+    static void Thingy.Rendering<Player>.Render(Player self, float dt) 
     {
         DrawSquare(self.Position + Shake.Val.Offset, SIZE, COLOR);
         DrawSquare(self.Position + Shake.Val.Offset, 8, Color.White);
     }
 
-    public static void Tick(ref Player self, float dt) 
+    static void Thingy.Ticking.Immutable<Player>.Tick(ref Player self, float dt) 
     {
         var offset = new Vector2();
         if (Raylib.IsKeyDown(KeyboardKey.W)) offset.Y -= 1f;

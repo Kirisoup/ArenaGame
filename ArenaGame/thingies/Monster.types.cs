@@ -46,7 +46,7 @@ public partial record struct Monster
         Color.Purple,
         Speed: 6 * Game.TARGET_FPS,
         MonsterMovement.Homing,
-        OnHit: static (ref Monster self) => {
+        OnHit: static (ref self) => {
             self.Size = 24;
             self.Speed = 2 * Game.TARGET_FPS;
         }

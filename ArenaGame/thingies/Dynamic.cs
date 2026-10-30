@@ -6,13 +6,13 @@ namespace ArenaGame.thingies;
 public readonly record struct Dynamic(Dynamic.Implementation Impl)
     : Thingy.Ticking<Dynamic>, Thingy.Rendering<Dynamic>
 {
-    public static void Tick(ref Dynamic self, float dt, Action<Dynamic>? addMore,
+    static void Thingy.Ticking<Dynamic>.Tick(ref Dynamic self, float dt, Action<Dynamic>? addMore,
         out bool removeSelf)
     {
         self.Impl.Tick(dt, addMore, out removeSelf);
     }
 
-    public static void Render(Dynamic self, float dt)
+    static void Thingy.Rendering<Dynamic>.Render(Dynamic self, float dt)
     {
         self.Impl.Render(dt);
     }

@@ -14,7 +14,7 @@ public partial record struct Monster(
     Monster.FnOnHit? OnHit = null)
     : Thingy.Ticking<Monster>, Thingy.Rendering<Monster>
 {
-    public static void Render(Monster self, float dt) 
+    static void Thingy.Rendering<Monster>.Render(Monster self, float dt) 
     {
         DrawSquare(self.Position + Shake.Val.Offset, self.Size, self.Color);
     }
@@ -42,7 +42,7 @@ public partial record struct Monster(
         return Vector2.Normalize(Player.Val.Position - position);
     }
 
-    public static void Tick(ref Monster self, float dt, Action<Monster>? addMore,
+    static void Thingy.Ticking<Monster>.Tick(ref Monster self, float dt, Action<Monster>? addMore,
         out bool removeSelf) 
     {
         removeSelf = false;

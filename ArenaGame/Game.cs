@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Reflection;
 using Raylib_cs;
 using ArenaGame.thingies;
@@ -19,6 +18,36 @@ public sealed class Game {
     
     private bool inTitleScreen = true;
     private bool paused;
+
+    // order matters
+    private static readonly Thingy.FnTickAll[] TICK_FNS = [
+        Shake.FnTickAll,
+        Wave.FnTickAll,
+        Particle.FnTickAll,
+        Player.FnTickAll,
+        Bullet.FnTickAll,
+        Monster.FnTickAll,
+        Dynamic.FnTickAll,
+    ];
+
+    private static readonly Thingy.FnRenderAll[] RENDER_FNS = [
+        Particle.FnRenderAll,
+        Player.FnRenderAll,
+        Bullet.FnRenderAll,
+        Monster.FnRenderAll,
+        Dynamic.FnRenderAll,
+        Wave.FnRenderAll,
+    ];
+
+    private static readonly Thingy.FnReset[] RESET_FNS = [
+        Player.Reset,
+        Bullet.Reset,
+        Particle.Reset,
+        Monster.Reset,
+        Dynamic.Reset,
+        Shake.Reset,
+        Wave.Reset,
+    ];
 
     public void Run()
     {
@@ -75,25 +104,9 @@ public sealed class Game {
             }
             else if (!Player.Val.Dead)
             {
-                // System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(Dynamic).TypeHandle);
-                // Console.WriteLine(Dynamic.Span.Length);
-                if (!this.paused) {
-                    Shake.TickAll(dt);
-                    Wave.TickAll(dt);
-                    Particle.TickAll(dt);
-                    Player.TickAll(dt);
-                    Bullet.TickAll(dt);
-                    Monster.TickAll(dt);
-                    Dynamic.TickAll(dt);
-                }
+                if (!this.paused) foreach (var tick in TICK_FNS) tick(dt);
+                foreach (var render in RENDER_FNS) render(dt);
 
-                Particle.RenderAll(dt);
-                Player.Render(Player.Val, dt);
-                Bullet.RenderAll(dt);
-                Monster.RenderAll(dt);
-                Dynamic.RenderAll(dt);
-
-                Wave.RenderAll(dt);
                 Raylib.DrawText("Wave " + Wave.Val.Level, 10 + (int) Shake.Val.Offset.X, 10 + (int) Shake.Val.Offset.Y, 30, Color.Red);
                 Raylib.DrawText("Score: " + Player.Val.Score, 10 + (int) Shake.Val.Offset.X, 40 + (int) Shake.Val.Offset.Y, 20, Color.Black);
                 Raylib.DrawText("Combo: " + Player.Val.Combo, 10 + (int) Shake.Val.Offset.X, 60 + (int) Shake.Val.Offset.Y, 20, Color.Black);
@@ -120,13 +133,7 @@ public sealed class Game {
 
                 if (Raylib.IsKeyPressed(KeyboardKey.R))
                 {
-                    Player.Reset();
-                    Bullet.Reset();
-                    Particle.Reset();
-                    Monster.Reset();
-                    Dynamic.Reset();
-                    Shake.Reset();
-                    Wave.Reset();
+                    foreach (var reset in RESET_FNS) reset();
                 }
             }
 

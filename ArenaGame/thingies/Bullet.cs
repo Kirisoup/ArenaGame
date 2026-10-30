@@ -14,12 +14,12 @@ public record struct Bullet(
     private const int SIZE = 8;
     private static readonly Color COLOR = Color.Black;
 
-    public static void Render(Bullet self, float dt) 
+    static void Thingy.Rendering<Bullet>.Render(Bullet self, float dt) 
     {
         DrawSquare(self.Position + Shake.Val.Offset, SIZE, COLOR);
     }
 
-    public static void Tick(ref Bullet self, float dt, Action<Bullet>? addMore,
+    static void Thingy.Ticking<Bullet>.Tick(ref Bullet self, float dt, Action<Bullet>? addMore,
         out bool removeSelf) 
     {
         self.Position += self.Velocity * dt;

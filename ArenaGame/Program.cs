@@ -1,11 +1,8 @@
-﻿using System.Numerics;
-using Raylib_cs;
-
-namespace ArenaGame;
+﻿namespace ArenaGame;
 
 class Program
 {
-    [System.STAThread]
+    [STAThread]
     private static void Main(string[] args)
     {
         Game game = new();

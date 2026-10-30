@@ -43,6 +43,10 @@ public static class Thingy {
         static abstract void Render(Self self, float dt);
     }
 
+    public delegate void FnReset();
+    public delegate void FnTickAll(float dt);
+    public delegate void FnRenderAll(float dt);
+
     extension<T>(T) where T : struct, Thingy<T>
     {
         public static Span<T> AsSpan() => CollectionsMarshal.AsSpan(Thingy<T>.List);
@@ -53,6 +57,7 @@ public static class Thingy {
             return ref AsSpan<T>()[0];
         }}
 
+        public static FnReset FnReset => Reset<T>;
         public static void Reset() 
         {
             T.HandleReset(out bool shouldClear);
@@ -73,6 +78,7 @@ public static class Thingy {
 
     extension<T>(T) where T : struct, Ticking<T>
     {
+        public static FnTickAll FnTickAll => TickAll<T>;
         public static void TickAll(float dt)
         {
             List<T> addBuf = [];
@@ -90,6 +96,7 @@ public static class Thingy {
     }
     extension<T>(T) where T : struct, Rendering<T>
     {
+        public static FnRenderAll FnRenderAll => RenderAll<T>;
         public static void RenderAll(float dt)
         {
             foreach (var thingy in AsSpan<T>()) T.Render(thingy, dt);

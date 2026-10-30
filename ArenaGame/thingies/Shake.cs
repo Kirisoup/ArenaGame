@@ -11,7 +11,7 @@ public record struct Shake(
 
     public const float DURATION = 0.5f;
 
-    public static void Tick(ref Shake self, float dt)
+    static void Thingy.Ticking.Immutable<Shake>.Tick(ref Shake self, float dt)
     {
         self.Timer = MathF.Max(self.Timer - dt, 0.0f);
         self.Offset = self.Dir * MathF.Sin(self.Timer / DURATION * 2 * MathF.PI) * self.Timer * 24;

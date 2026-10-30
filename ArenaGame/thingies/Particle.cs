@@ -14,12 +14,12 @@ public record struct Particle(
     private const float DRAG = 0.6f;
     private const int SIZE = 6;
 
-    public static void Render(Particle self, float dt) 
+    static void Thingy.Rendering<Particle>.Render(Particle self, float dt) 
     {
         DrawSquare(self.Position + Shake.Val.Offset, SIZE, self.Color);
     }
 
-    public static void Tick(ref Particle self, float dt, Action<Particle>? addMore,
+    static void Thingy.Ticking<Particle>.Tick(ref Particle self, float dt, Action<Particle>? addMore,
             out bool removeSelf) 
     {
         self.Position += self.Velocity * dt;
