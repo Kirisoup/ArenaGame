@@ -12,12 +12,18 @@ public record struct Player(
     int Combo = 0)
     : Thingy.Ticking.Immutable<Player>, Thingy.Rendering<Player> 
 {
-    static Player() => Player.Val = new(new(400, 300));
-
     private const int SIZE = 32;
     private const int SPEED = 5 * Game.TARGET_FPS;
     private const float SHOT_TIME = 0.1f;
     private static readonly Color COLOR = Color.Red;
+
+    static void Thingy<Player>.Reset(Action clear)
+    {
+        Player.Val.Dead = false;
+        Player.Val.Position = new(400, 300);
+        Player.Val.Score = 0;
+        Player.Val.Combo = 0;
+    }
 
     static void Thingy.Rendering<Player>.Render(Player self, float dt) 
     {
@@ -66,12 +72,5 @@ public record struct Player(
 
             break;
         }
-    }
-
-    static void Thingy<Player>.HandleReset(out bool shouldClear) {
-        shouldClear = false;
-        Player.Val.Dead = false;
-        Player.Val.Position = new(400, 300);
-        Player.Val.Score = 0;
     }
 }

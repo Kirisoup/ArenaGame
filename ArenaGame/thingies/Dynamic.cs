@@ -6,6 +6,13 @@ namespace ArenaGame.thingies;
 public readonly record struct Dynamic(Dynamic.Implementation Impl)
     : Thingy.Ticking<Dynamic>, Thingy.Rendering<Dynamic>
 {
+    static void Thingy<Dynamic>.Reset(Action clear) {
+        clear();
+        Dynamic.Add(new(new BasicSpawner()));
+        Dynamic.Add(new(new RockSpawner(9f)));
+        Dynamic.Add(new(new SniperSpawner(6f)));
+    }
+
     static void Thingy.Ticking<Dynamic>.Tick(ref Dynamic self, float dt, Action<Dynamic>? addMore,
         out bool removeSelf)
     {
@@ -17,7 +24,8 @@ public readonly record struct Dynamic(Dynamic.Implementation Impl)
         self.Impl.Render(dt);
     }
 
-    public interface Implementation {
+    public interface Implementation
+    {
         void Tick(float dt, Action<Dynamic>? addMore, out bool removeSelf)
         {
             removeSelf = false;
@@ -25,24 +33,13 @@ public readonly record struct Dynamic(Dynamic.Implementation Impl)
         void Render(float dt) {}
     }
 
-    public static void Init() {
-        Console.WriteLine("init");
-        Dynamic.Add(new(new BasicSpawner()));
-        Dynamic.Add(new(new RockSpawner(9f)));
-        Dynamic.Add(new(new SniperSpawner(6f)));
-    }
-
-    static Dynamic() => Init();
-    static void Thingy<Dynamic>.HandleReset(out bool shouldClear) {
-        shouldClear = false;
-    }
-
     public record struct BasicSpawner(float NextSpawn, float Timer) : Implementation 
     {
         public void Tick(float dt, Action<Dynamic>? addMore, out bool removeSelf)
         {
             removeSelf = false;
-            if (this.Timer >= this.NextSpawn) {
+            if (this.Timer >= this.NextSpawn)
+            {
                 var pos = Monster.GetRandomPosOnEdge();
                 var u = Wave.Val.Level + 1 / 2 - 1;
                 var monster = Raylib.GetRandomValue(0, 7) switch {

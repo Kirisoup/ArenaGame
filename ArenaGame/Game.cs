@@ -80,6 +80,7 @@ public sealed class Game {
 
         if (File.Exists(PLAYER_SCORE_FILE)) _ = int.TryParse(File.ReadAllText(PLAYER_SCORE_FILE), out this.highScore);
 
+        foreach (var reset in RESET_FNS) reset();
         while (!Raylib.WindowShouldClose())
         {
             var dt = Raylib.GetFrameTime();

@@ -10,8 +10,8 @@ public interface Thingy<Self>
     }
 
     static List<Self> List { get; set; } = [];
-    static virtual void HandleReset(out bool shouldClear) {
-        shouldClear = true;
+    static virtual void Reset(Action clear) {
+        clear();
     }
 }
 
@@ -60,8 +60,7 @@ public static class Thingy {
         public static FnReset FnReset => Reset<T>;
         public static void Reset() 
         {
-            T.HandleReset(out bool shouldClear);
-            if (shouldClear) Thingy<T>.List.Clear();
+            T.Reset(Thingy<T>.List.Clear);
         }
     
         public static void Add(T thingy) 

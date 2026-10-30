@@ -9,16 +9,13 @@ public record struct Wave(
     float MonsterWaveIntervalMod)
     : Thingy.Ticking.Immutable<Wave>, Thingy.Rendering<Wave>
 {
-    static Wave() => Wave.Val = Init();
-    public static Wave Init() => new(INIT, 0f, GetWaveLength(INIT), GetMonsterWaveIntervalMod(INIT));
-
     private const int INIT = 1;
     private static float GetWaveLength(int level) => 25.0f + level * 2.5f;
     private static float GetMonsterWaveIntervalMod(int level) => 0.33f + 0.67f / level;
 
-    static void Thingy<Wave>.HandleReset(out bool shouldClear) {
-        shouldClear = false;
-        Wave.Val = Init();
+    static void Thingy<Wave>.Reset(Action clear)
+    {
+        Wave.Val = new(INIT, 0f, GetWaveLength(INIT), GetMonsterWaveIntervalMod(INIT));
     }
 
     static void Thingy.Ticking.Immutable<Wave>.Tick(ref Wave self, float dt)
