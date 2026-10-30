@@ -20,28 +20,35 @@ public static class Thingies {
 }
 
 public record struct Shake(
-    float timer,
-    Vector2 dir,
-    Vector2 offset
+    float Timer,
+    Vector2 Dir,
+    Vector2 Offset
 ) : Thingy.Ticking.Immutable<Shake> {
-    public static Shake shake = new();
+    static Shake() => Shake.Val = new();
 
     public const float DURATION = 0.5f;
 
     public static void Tick(ref Shake self, float dt)
     {
-        self.timer = MathF.Max(self.timer - dt, 0.0f);
-        self.offset = self.dir * MathF.Sin((self.timer / DURATION) * 2 * MathF.PI) * self.timer * 24;
+        self.Timer = MathF.Max(self.Timer - dt, 0.0f);
+        self.Offset = self.Dir * MathF.Sin(self.Timer / DURATION * 2 * MathF.PI) * self.Timer * 24;
+    }
+    static void Thingy<Shake>.HandleReset(out bool shouldClear) {
+        shouldClear = false;
+        Shake.Val = new();
+    }
+
+    public void ShakeTowards(Vector2 dir) {
+        this.Timer = MathF.Min(this.Timer + Shake.DURATION, 4.0f);
+        this.Dir = dir;
     }
 }
 
 public record struct Bullet(
-    Vector2 position,
-    Vector2 velocity)
+    Vector2 Position,
+    Vector2 Velocity)
     : Thingy.Ticking<Bullet>, Thingy.Rendering<Bullet>
 {
-    public static readonly Thingy<Bullet>.Manager all = new();
-
     public const float BASE_SPEED = 10 * Game.TARGET_FPS;
 
     private const int SIZE = 8;
@@ -49,55 +56,58 @@ public record struct Bullet(
 
     public static void Render(Bullet self, float dt) 
     {
-        Thingies.DrawSquare(self.position + Shake.shake.offset, SIZE, COLOR);
+        Thingies.DrawSquare(self.Position + Shake.Val.Offset, SIZE, COLOR);
     }
 
     public static void Tick(ref Bullet self, float dt, Action<Bullet>? addMore,
         out bool removeSelf) 
     {
-        self.position += self.velocity * dt;
+        self.Position += self.Velocity * dt;
 
         removeSelf = false;
-        removeSelf = removeSelf || self.position.X < -SIZE / 2.0f || self.position.X > Raylib.GetScreenWidth()  + SIZE / 2.0f;
-        removeSelf = removeSelf || self.position.Y < -SIZE / 2.0f || self.position.Y > Raylib.GetScreenHeight() + SIZE / 2.0f;
+        removeSelf = removeSelf || self.Position.X < -SIZE / 2.0f || self.Position.X > Raylib.GetScreenWidth()  + SIZE / 2.0f;
+        removeSelf = removeSelf || self.Position.Y < -SIZE / 2.0f || self.Position.Y > Raylib.GetScreenHeight() + SIZE / 2.0f;
+        if (removeSelf) {
+            // Shake.Val.Timer = MathF.Min(Shake.Val.Timer + Shake.DURATION * 2f, 8.0f);
+            Shake.Val.Timer += 0.5f + (4 - Shake.Val.Timer) / 4f;
+            Shake.Val.Dir = Vector2.Normalize(Player.Val.Position - self.Position);
+        }
     }
 }
 
 public record struct Particle(
-    Vector2 position,
-    Vector2 velocity,
-    Color color,
-    float lifetime)
+    Vector2 Position,
+    Vector2 Velocity,
+    Color Color,
+    float Lifetime)
     : Thingy.Ticking<Particle>, Thingy.Rendering<Particle>
 {
-    public static readonly Thingy<Particle>.Manager all = new();
-
     private const float DRAG = 0.6f;
     private const int SIZE = 6;
 
     public static void Render(Particle self, float dt) 
     {
-        Thingies.DrawSquare(self.position + Shake.shake.offset, SIZE, self.color);
+        Thingies.DrawSquare(self.Position + Shake.Val.Offset, SIZE, self.Color);
     }
 
     public static void Tick(ref Particle self, float dt, Action<Particle>? addMore,
             out bool removeSelf) 
     {
-        self.position += self.velocity * dt;
-        self.velocity *= 1-((1-DRAG) * dt);
-        self.lifetime -= dt;
-        removeSelf = self.lifetime <= 0f;
+        self.Position += self.Velocity * dt;
+        self.Velocity *= 1-((1-DRAG) * dt);
+        self.Lifetime -= dt;
+        removeSelf = self.Lifetime <= 0f;
     }
 }
 
 public record struct Player(
-    Vector2 position,
-    bool dead = false,
-    float shotCooldown = 0f,
-    int score = 0)
+    Vector2 Position,
+    bool Dead = false,
+    float ShotCooldown = 0f,
+    int Score = 0)
     : Thingy.Ticking.Immutable<Player>, Thingy.Rendering<Player> 
 {
-    public static Player thePlayer = new Player(new(400, 300));
+    static Player() => Player.Val = new(new(400, 300));
 
     private const int SIZE = 32;
     private const int SPEED = 5 * Game.TARGET_FPS;
@@ -106,8 +116,8 @@ public record struct Player(
 
     public static void Render(Player self, float dt) 
     {
-        Thingies.DrawSquare(self.position + Shake.shake.offset, SIZE, COLOR);
-        Thingies.DrawSquare(self.position + Shake.shake.offset, 6, Color.White);
+        Thingies.DrawSquare(self.Position + Shake.Val.Offset, SIZE, COLOR);
+        Thingies.DrawSquare(self.Position + Shake.Val.Offset, 8, Color.White);
     }
 
     public static void Tick(ref Player self, float dt) 
@@ -123,119 +133,124 @@ public record struct Player(
             offset = Vector2.Normalize(offset) * SPEED * dt;
         }
 
-        self.position += offset;
-        self.position = Vector2.Clamp(self.position, 
+        self.Position += offset;
+        self.Position = Vector2.Clamp(self.Position, 
             new Vector2(SIZE / 2.0f, SIZE / 2.0f),
             new Vector2(Raylib.GetScreenWidth() - SIZE / 2.0f, Raylib.GetScreenHeight() - SIZE / 2.0f));
         
-        self.shotCooldown = Math.Max(0f, self.shotCooldown - dt);
-        if (self.shotCooldown == 0f && (Raylib.IsMouseButtonPressed(MouseButton.Left) || Raylib.IsKeyPressed(KeyboardKey.Space)))
+        self.ShotCooldown = Math.Max(0f, self.ShotCooldown - dt);
+        if (self.ShotCooldown == 0f && (Raylib.IsMouseButtonPressed(MouseButton.Left) || Raylib.IsKeyPressed(KeyboardKey.Space)))
         {
             var mousePos = Raylib.GetMousePosition();
-            var velocity = Vector2.Normalize(mousePos - self.position) * Bullet.BASE_SPEED;
-            Bullet.all.Add(new Bullet(self.position, velocity));
+            var velocity = Vector2.Normalize(mousePos - self.Position) * Bullet.BASE_SPEED;
+            Bullet.Add(new Bullet(self.Position, velocity));
             Raylib.PlaySound(Game.Instance.SoundShoot);
-            self.shotCooldown = SHOT_TIME;
+            self.ShotCooldown = SHOT_TIME;
         }
 
-        foreach (var monster in Monster.all)
+        foreach (var monster in Monster.Span)
         {
-            if (!Thingies.IsPointInsideSquare(self.position, (monster.position, monster.size))) continue;
-            self.dead = true;
+            if (!Thingies.IsPointInsideSquare(self.Position, (monster.Position, monster.Size))) continue;
+            self.Dead = true;
             Raylib.PlaySound(Game.Instance.SoundDeath);
-            if (self.score > Game.Instance.highScore)
+            if (self.Score > Game.Instance.highScore)
             {
-                Game.Instance.highScore = self.score;
-                File.WriteAllText(Game.PLAYER_SCORE_FILE, self.score.ToString());
+                Game.Instance.highScore = self.Score;
+                File.WriteAllText(Game.PLAYER_SCORE_FILE, self.Score.ToString());
             }
 
             break;
         }
     }
+
+    static void Thingy<Player>.HandleReset(out bool shouldClear) {
+        shouldClear = false;
+        Player.Val.Dead = false;
+        Player.Val.Position = new(400, 300);
+        Player.Val.Score = 0;
+    }
 }
 
 public partial record struct Monster(
-    Vector2 position,
-    int health,
-    int size,
-    Color color,
-    int speed,
-    Monster.Movement movement,
-    Monster.OnHit? onHit = null)
+    Vector2 Position,
+    int Health,
+    int Size,
+    Color Color,
+    int Speed,
+    Monster.MonsterMovement Movement,
+    Monster.FnOnHit? OnHit = null)
     : Thingy.Ticking<Monster>, Thingy.Rendering<Monster>
 {
-    public delegate void OnHit(ref Monster self);
-    public readonly struct Movement {
+    public delegate void FnOnHit(ref Monster self);
+    public readonly struct MonsterMovement {
         public enum Kind { Homing, Direct }
 
         public readonly Kind kind;
         public readonly Vector2 direction;
-        private Movement(Kind kind, Vector2 direction = default)
+        private MonsterMovement(Kind kind, Vector2 direction = default)
         {
             this.kind = kind;
             this.direction = direction;
         }
 
-        public static readonly Movement Homing = new(Kind.Homing);
-        public static Movement Direct(Vector2 direction) => new(Kind.Direct, direction);
+        public static readonly MonsterMovement Homing = new(Kind.Homing);
+        public static MonsterMovement Direct(Vector2 direction) => new(Kind.Direct, direction);
     }
 
     public static Monster Goblin(Vector2 position) => new(
         position,
-        health: 1,
-        size: 24,
+        Health: 1,
+        Size: 24,
         Color.Green,
-        speed: 4 * Game.TARGET_FPS,
-        Movement.Homing
+        Speed: 4 * Game.TARGET_FPS,
+        MonsterMovement.Homing
     );
 
     public static Monster ToughOrange(Vector2 position) => new(
         position,
-        health: 4,
-        size: 32,
+        Health: 4,
+        Size: 32,
         Color.Orange,
-        speed: 2 * Game.TARGET_FPS,
-        Movement.Homing
+        Speed: 2 * Game.TARGET_FPS,
+        MonsterMovement.Homing
     );
 
     public static Monster Funny2Hit(Vector2 position) => new(
         position,
-        health: 2,
-        size: 48,
+        Health: 2,
+        Size: 48,
         Color.Purple,
-        speed: 6 * Game.TARGET_FPS,
-        Movement.Homing,
-        onHit: static (ref Monster self) => {
-            self.size = 24;
-            self.speed = 2 * Game.TARGET_FPS;
+        Speed: 6 * Game.TARGET_FPS,
+        MonsterMovement.Homing,
+        OnHit: static (ref Monster self) => {
+            self.Size = 24;
+            self.Speed = 2 * Game.TARGET_FPS;
         }
     );
 
     public static Monster Sniper(Vector2 position, Vector2 direction) => new(
         position,
-        health: 1,
-        size: 16,
+        Health: 1,
+        Size: 16,
         Color.Blue,
-        speed: 8 * Game.TARGET_FPS,
-        Movement.Direct(direction)
+        Speed: 8 * Game.TARGET_FPS,
+        MonsterMovement.Direct(direction)
     );
 
     public static Monster Rock(Vector2 position, Vector2 direction) => new(
         position,
-        health: 1024,
-        size: 64,
+        Health: 1024,
+        Size: 64,
         Color.Black,
-        speed: 2 * Game.TARGET_FPS,
-        Movement.Direct(direction)
+        Speed: 2 * Game.TARGET_FPS,
+        MonsterMovement.Direct(direction)
     );
 }
 
 public partial record struct Monster {
-    public static readonly Thingy<Monster>.Manager all = new();
-
     public static void Render(Monster self, float dt) 
     {
-        Thingies.DrawSquare(self.position + Shake.shake.offset, self.size, self.color);
+        Thingies.DrawSquare(self.Position + Shake.Val.Offset, self.Size, self.Color);
     }
 
     public static Vector2 GetRandomPosOnEdge()
@@ -258,7 +273,7 @@ public partial record struct Monster {
 
     public static Vector2 GetDirectionTowardsPlayer(Vector2 position)
     {
-        return Vector2.Normalize(Player.thePlayer.position - position);
+        return Vector2.Normalize(Player.Val.Position - position);
     }
 
     public static void Tick(ref Monster self, float dt, Action<Monster>? addMore,
@@ -266,53 +281,54 @@ public partial record struct Monster {
     {
         removeSelf = false;
 
-        var delta = self.movement.kind switch
+        var delta = self.Movement.kind switch
         {
-            Movement.Kind.Homing => GetDirectionTowardsPlayer(self.position),
-            Movement.Kind.Direct => self.movement.direction,
+            MonsterMovement.Kind.Homing => GetDirectionTowardsPlayer(self.Position),
+            MonsterMovement.Kind.Direct => self.Movement.direction,
             _ => default, // unreachable
         };
-        delta *= self.speed * dt;
-        self.position += delta;
+        delta *= self.Speed * dt;
+        self.Position += delta;
         
-        for (int i = 0; i < Bullet.all.Count(); i++)
+        for (int i = 0; i < Bullet.Span.Length; i++)
         {
-            var bullet = Bullet.all[i];
-            if (!Thingies.IsPointInsideSquare(bullet.position, (self.position, self.size))) continue;
+            var bullet = Bullet.Span[i];
+            if (!Thingies.IsPointInsideSquare(bullet.Position, (self.Position, self.Size))) continue;
             
-            Bullet.all.RemoveAt(i);
+            Bullet.RemoveAt(i);
             i --;
             
-            self.health --;
-            self.onHit?.Invoke(ref self);
+            self.Health --;
+            self.OnHit?.Invoke(ref self);
 
             // hit particles
-            var particleCount = self.health > 0 ? 5 : 10;
+            var particleCount = self.Health > 0 ? 2 : 10;
             for (int j = 0; j < particleCount; j++) 
             {
                 var angle = Raylib.GetRandomValue(0, 359) * Raylib.DEG2RAD;
                 var velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
                 velocity *= 1f + Raylib.GetRandomValue(0, 256) / 256f;
                 velocity *= 1f * Game.TARGET_FPS;
-                if (self.health > 0) velocity += delta * 2f;
-                else velocity += bullet.velocity * 0.75f;
+                if (self.Health > 0) velocity += bullet.Velocity * -0.25f;
+                else velocity += bullet.Velocity * 0.5f;
 
-                Particle.all.Add(new Particle(
-                    self.position,
+                Particle.Add(new Particle(
+                    bullet.Position,
                     velocity,
-                    self.color,
-                    lifetime: 0.5f + Raylib.GetRandomValue(0, 256) / 256f * 0.25f
+                    self.Color,
+                    Lifetime: 0.5f + Raylib.GetRandomValue(0, 256) / 256f * 0.25f
                 ));
             }
 
             // Screen shake
-            Shake.shake.timer = MathF.Min(Shake.shake.timer + Shake.DURATION, 3.0f);
-            Shake.shake.dir = Vector2.Normalize(Player.thePlayer.position - self.position);
+            if (Shake.Val.Timer >= Shake.DURATION) Shake.Val.Timer -= (Shake.Val.Timer - 1f) / 2;
+            else Shake.Val.Timer = Math.Max(Shake.Val.Timer + Shake.DURATION, Shake.DURATION * 1.25f);
+            Shake.Val.Dir = Vector2.Normalize(Player.Val.Position - self.Position);
 
-            if (self.health <= 0)
+            if (self.Health <= 0)
             {
                 removeSelf = true;
-                Player.thePlayer.score ++;
+                Player.Val.Score ++;
                 Raylib.PlaySound(Game.Instance.SoundKill);
                 break;
             }
@@ -321,59 +337,62 @@ public partial record struct Monster {
 }
 
 public record struct Wave(
-    int level,
-    float timer,
-    float length,
-    float monsterWaveIntervalMod)
+    int Level,
+    float Timer,
+    float Length,
+    float MonsterWaveIntervalMod)
     : Thingy.Ticking.Immutable<Wave>, Thingy.Rendering<Wave>
 {
-    public static Wave wave = Init();
+    static Wave() => Wave.Val = Init();
     public static Wave Init() => new(INIT, 0f, GetWaveLength(INIT), GetMonsterWaveIntervalMod(INIT));
 
-    private const int INIT = 3;
+    private const int INIT = 1;
     private static float GetWaveLength(int level) => 25.0f + level * 2.5f;
     private static float GetMonsterWaveIntervalMod(int level) => 0.33f + 0.67f / level;
 
+    static void Thingy<Wave>.HandleReset(out bool shouldClear) {
+        shouldClear = false;
+        Wave.Val = Init();
+    }
+
     public static void Tick(ref Wave self, float dt)
     {
-        self.timer += dt;
-        if (self.timer >= self.length) {
-            self.level ++;
-            self.timer = 0f;
-            self.length = GetWaveLength(self.level);
-            self.monsterWaveIntervalMod = GetMonsterWaveIntervalMod(self.level);
+        self.Timer += dt;
+        if (self.Timer >= self.Length) {
+            self.Level ++;
+            self.Timer = 0f;
+            self.Length = GetWaveLength(self.Level);
+            self.MonsterWaveIntervalMod = GetMonsterWaveIntervalMod(self.Level);
         }
     }
 
     public static void Render(Wave self, float dt)
     {
-        var timerText = $"{self.length - self.timer:0.00}";
+        var timerText = $"{self.Length - self.Timer:0.00}";
         var timerTextWidth = Raylib.MeasureText(timerText, 30);
         Raylib.DrawText(timerText,
-            (Raylib.GetScreenWidth() - timerTextWidth) / 2 + (int) Shake.shake.offset.X, 
-            5 + (int) Shake.shake.offset.Y,
+            (Raylib.GetScreenWidth() - timerTextWidth) / 2 + (int) Shake.Val.Offset.X, 
+            5 + (int) Shake.Val.Offset.Y,
             30, Color.Red);
     }
 }
 
-public readonly record struct MiscThingy(MiscThingy.Impl impl)
-    : Thingy.Ticking<MiscThingy>, Thingy.Rendering<MiscThingy>
+public readonly record struct Dynamic(Dynamic.Implementation Impl)
+    : Thingy.Ticking<Dynamic>, Thingy.Rendering<Dynamic>
 {
-    public static readonly Thingy<MiscThingy>.Manager all = new();
-
-    public static void Tick(ref MiscThingy self, float dt, Action<MiscThingy>? addMore,
+    public static void Tick(ref Dynamic self, float dt, Action<Dynamic>? addMore,
         out bool removeSelf)
     {
-        self.impl.Tick(dt, addMore, out removeSelf);
+        self.Impl.Tick(dt, addMore, out removeSelf);
     }
 
-    public static void Render(MiscThingy self, float dt)
+    public static void Render(Dynamic self, float dt)
     {
-        self.impl.Render(dt);
+        self.Impl.Render(dt);
     }
 
-    public interface Impl {
-        void Tick(float dt, Action<MiscThingy>? addMore, out bool removeSelf)
+    public interface Implementation {
+        void Tick(float dt, Action<Dynamic>? addMore, out bool removeSelf)
         {
             removeSelf = false;
         }
@@ -381,108 +400,112 @@ public readonly record struct MiscThingy(MiscThingy.Impl impl)
     }
 
     public static void Init() {
-        all.Add(new(new BasicSpawner()));
-        all.Add(new(new RockSpawner(9f)));
-        all.Add(new(new SniperSpawner(6f)));
+        Console.WriteLine("init");
+        Dynamic.Add(new(new BasicSpawner()));
+        Dynamic.Add(new(new RockSpawner(9f)));
+        Dynamic.Add(new(new SniperSpawner(6f)));
     }
 
-    static MiscThingy() { Init(); }
+    static Dynamic() => Init();
+    static void Thingy<Dynamic>.HandleReset(out bool shouldClear) {
+        shouldClear = false;
+    }
 
-    public record struct BasicSpawner(float nextSpawn, float timer) : Impl 
+    public record struct BasicSpawner(float NextSpawn, float Timer) : Implementation 
     {
-        public void Tick(float dt, Action<MiscThingy>? addMore, out bool removeSelf)
+        public void Tick(float dt, Action<Dynamic>? addMore, out bool removeSelf)
         {
             removeSelf = false;
-            if (this.timer >= this.nextSpawn) {
+            if (this.Timer >= this.NextSpawn) {
                 var pos = Monster.GetRandomPosOnEdge();
-                var u = (Wave.wave.level + 1 / 2) - 1;
+                var u = Wave.Val.Level + 1 / 2 - 1;
                 var monster = Raylib.GetRandomValue(0, 7) switch {
                     7 => Monster.ToughOrange(pos),
                     var n => (n < u) ? Monster.Funny2Hit(pos) : Monster.Goblin(pos),
                 };
                 // Raylib.GetRandomValue(0, 7) == 7 ? Monster.ToughOrange(pos) : Monster.Goblin(pos);
-                Monster.all.Add(monster);
+                Monster.Add(monster);
             }
             
-            if (this.nextSpawn == 0.0f || this.timer >= this.nextSpawn)
+            if (this.NextSpawn == 0.0f || this.Timer >= this.NextSpawn)
             {
-                this.nextSpawn = (Raylib.GetRandomValue(1000, 3000) / 1000.0f) * Wave.wave.monsterWaveIntervalMod;
-                this.timer = 0.0f;
+                this.NextSpawn = Raylib.GetRandomValue(1000, 3000) / 1000.0f * Wave.Val.MonsterWaveIntervalMod;
+                this.Timer = 0.0f;
             }
     
-            this.timer += dt;
+            this.Timer += dt;
         }
     }
 
-    public record struct RockSpawner(float nextSpawn = 9f, float timer = 0f) : Impl {
-        public void Tick(float dt, Action<MiscThingy>? addMore, out bool removeSelf)
+    public record struct RockSpawner(float NextSpawn = 9f, float Timer = 0f) : Implementation {
+        public void Tick(float dt, Action<Dynamic>? addMore, out bool removeSelf)
         {
             removeSelf = false;
-            if (this.timer >= this.nextSpawn) 
+            if (this.Timer >= this.NextSpawn) 
             {
                 var pos = Monster.GetRandomPosOnEdge();
-                Monster.all.Add(Monster.Rock(pos, Monster.GetDirectionTowardsPlayer(pos)));
+                Monster.Add(Monster.Rock(pos, Monster.GetDirectionTowardsPlayer(pos)));
             }
-            
-            if (this.nextSpawn == 0.0f || this.timer >= this.nextSpawn)
+
+            if (this.NextSpawn == 0.0f || this.Timer >= this.NextSpawn)
             {
-                var x = Math.Clamp(Wave.wave.level/2 - 2, 1, 3);
-                this.nextSpawn = (Raylib.GetRandomValue(9000/x, 27000/x) / 1000.0f) * Wave.wave.monsterWaveIntervalMod;
-                this.timer = 0.0f;
+                var x = Math.Clamp(Wave.Val.Level/2 - 2, 1, 3);
+                this.NextSpawn = (Raylib.GetRandomValue(9000/x, 27000/x) / 1000.0f) * Wave.Val.MonsterWaveIntervalMod;
+                this.Timer = 0.0f;
             }
     
-            this.timer += dt;
+            this.Timer += dt;
         }
     }
 
-    public record struct SniperSpawner(float nextSpawn = 6f, float timer = 0f) : Impl 
+    public record struct SniperSpawner(float NextSpawn = 6f, float Timer = 0f) : Implementation 
     {
-        public void Tick(float dt, Action<MiscThingy>? addMore, out bool removeSelf)
+        public void Tick(float dt, Action<Dynamic>? addMore, out bool removeSelf)
         {
             removeSelf = false;
-            if (this.timer >= this.nextSpawn) 
+            if (this.Timer >= this.NextSpawn) 
             {
                 addMore?.Invoke(new(new Inner(
                     Monster.GetRandomPosOnEdge(),
-                    count: (Wave.wave.level - 1) * 2 - 1
+                    Count: (Wave.Val.Level - 1) * 2 - 1
                 )));
             }
             
-            if (this.nextSpawn == 0.0f || this.timer >= this.nextSpawn)
+            if (this.NextSpawn == 0.0f || this.Timer >= this.NextSpawn)
             {
-                this.nextSpawn = (Raylib.GetRandomValue(6000, 18000) / 1000.0f) * Wave.wave.monsterWaveIntervalMod;
-                this.timer = 0.0f;
+                this.NextSpawn = (Raylib.GetRandomValue(6000, 18000) / 1000.0f) * Wave.Val.MonsterWaveIntervalMod;
+                this.Timer = 0.0f;
             }
     
-            this.timer += dt;
+            this.Timer += dt;
         }
 
         public record struct Inner(
-            Vector2 pos,
-            int count,
-            float timer = 0f,
-            float lastShot = 0f)
-            : Impl
+            Vector2 Pos,
+            int Count,
+            float Timer = 0f,
+            float LastShot = 0f)
+            : Implementation
         {
             private const float INTERVAL = 0.4f;
 
-            public void Tick(float dt, Action<MiscThingy>? addMore, out bool removeSelf)
+            public void Tick(float dt, Action<Dynamic>? addMore, out bool removeSelf)
             {
-                removeSelf = this.count <= 0;
+                removeSelf = this.Count <= 0;
                 if (removeSelf) return;
 
-                if (this.timer - this.lastShot >= INTERVAL) {
-                    this.count --;
-                    this.lastShot = timer;
+                if (this.Timer - this.LastShot >= INTERVAL) {
+                    this.Count --;
+                    this.LastShot = Timer;
 
                     var monster = Monster.Sniper(
-                        this.pos,
-                        Monster.GetDirectionTowardsPlayer(this.pos)
+                        this.Pos,
+                        Monster.GetDirectionTowardsPlayer(this.Pos)
                     );
-                    Monster.all.Add(monster);
+                    Monster.Add(monster);
                 }
-                this.timer += dt;
-                removeSelf = this.count <= 0;
+                this.Timer += dt;
+                removeSelf = this.Count <= 0;
             }
         }
     }

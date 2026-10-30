@@ -49,7 +49,7 @@ public sealed class Game {
         this.SoundKill  = LoadSound("kill.wav");
         this.SoundShoot = LoadSound("shoot.wav");
 
-        if (File.Exists(PLAYER_SCORE_FILE)) int.TryParse(File.ReadAllText(PLAYER_SCORE_FILE), out this.highScore);
+        if (File.Exists(PLAYER_SCORE_FILE)) _ = int.TryParse(File.ReadAllText(PLAYER_SCORE_FILE), out this.highScore);
 
         while (!Raylib.WindowShouldClose())
         {
@@ -73,27 +73,29 @@ public sealed class Game {
                     this.inTitleScreen = false;
                 }
             }
-            else if (!Player.thePlayer.dead)
+            else if (!Player.Val.Dead)
             {
+                // System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(Dynamic).TypeHandle);
+                // Console.WriteLine(Dynamic.Span.Length);
                 if (!this.paused) {
-                    Shake.Tick(ref Shake.shake, dt);
-                    Wave.Tick(ref Wave.wave, dt);
-                    Thingy<Particle>.Manager.Tick(Particle.all, dt);
-                    Player.Tick(ref Player.thePlayer, dt);
-                    Thingy<Bullet>.Manager.Tick(Bullet.all, dt);
-                    Thingy<Monster>.Manager.Tick(Monster.all, dt);
-                    Thingy<MiscThingy>.Manager.Tick(MiscThingy.all, dt);
+                    Shake.TickAll(dt);
+                    Wave.TickAll(dt);
+                    Particle.TickAll(dt);
+                    Player.TickAll(dt);
+                    Bullet.TickAll(dt);
+                    Monster.TickAll(dt);
+                    Dynamic.TickAll(dt);
                 }
 
-                Thingy<Particle>.Manager.Render(Particle.all, dt);
-                Player.Render(Player.thePlayer, dt);
-                Thingy<Bullet>.Manager.Render(Bullet.all, dt);
-                Thingy<Monster>.Manager.Render(Monster.all, dt);
-                Thingy<MiscThingy>.Manager.Render(MiscThingy.all, dt);
+                Particle.RenderAll(dt);
+                Player.Render(Player.Val, dt);
+                Bullet.RenderAll(dt);
+                Monster.RenderAll(dt);
+                Dynamic.RenderAll(dt);
 
-                Wave.Render(Wave.wave, dt);
-                Raylib.DrawText("Wave " + Wave.wave.level, 10 + (int) Shake.shake.offset.X, 10 + (int) Shake.shake.offset.Y, 30, Color.Red);
-                Raylib.DrawText("Score: " + Player.thePlayer.score, 10 + (int) Shake.shake.offset.X, 40 + (int) Shake.shake.offset.Y, 20, Color.Black);
+                Wave.RenderAll(dt);
+                Raylib.DrawText("Wave " + Wave.Val.Level, 10 + (int) Shake.Val.Offset.X, 10 + (int) Shake.Val.Offset.Y, 30, Color.Red);
+                Raylib.DrawText("Score: " + Player.Val.Score, 10 + (int) Shake.Val.Offset.X, 40 + (int) Shake.Val.Offset.Y, 20, Color.Black);
 
                 if (/* Raylib.IsKeyPressed(KeyboardKey.Space) || */Raylib.IsKeyPressed(KeyboardKey.Escape))
                 {
@@ -113,19 +115,17 @@ public sealed class Game {
                 Raylib.DrawText("Press R to restart", 10, 40, 20, Color.Black);
                 
                 Raylib.DrawText("High Score: " + this.highScore, 10, 70, 20, Color.Black);
-                Raylib.DrawText("Your Score: " + Player.thePlayer.score, 10, 90, 20, Color.Black);
+                Raylib.DrawText("Your Score: " + Player.Val.Score, 10, 90, 20, Color.Black);
 
                 if (Raylib.IsKeyPressed(KeyboardKey.R))
                 {
-                    Player.thePlayer.dead = false;
-                    Player.thePlayer.position = new(400, 300);
-                    Bullet.all.Clear();
-                    Particle.all.Clear();
-                    Monster.all.Clear();
-                    MiscThingy.all.Clear();
-                    MiscThingy.Init();
-                    Shake.shake = new();
-                    Wave.wave = Wave.Init();
+                    Player.Reset();
+                    Bullet.Reset();
+                    Particle.Reset();
+                    Monster.Reset();
+                    Dynamic.Reset();
+                    Shake.Reset();
+                    Wave.Reset();
                 }
             }
 

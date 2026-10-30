@@ -1,24 +1,32 @@
-using System.Numerics;
-using System.Collections;
 using System.Runtime.InteropServices;
 
 namespace ArenaGame.thingies;
 
-public partial interface Thingy<Self>
-    where Self : struct, Thingy<Self>;
+public interface Thingy<Self>
+    where Self : struct, Thingy<Self>
+{
+    static Thingy() {
+        System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(Self).TypeHandle);
+    }
+
+    static List<Self> List { get; set; } = [];
+    static virtual void HandleReset(out bool shouldClear) {
+        shouldClear = true;
+    }
+}
 
 public static class Thingy {
     public interface Ticking<Self> : Thingy<Self>
         where Self : struct, Ticking<Self>
     {
-        public static abstract void Tick(ref Self self, float dt, Action<Self>? addMore, out bool removeSelf);
+        static abstract void Tick(ref Self self, float dt, Action<Self>? addMore, out bool removeSelf);
     }
 
     public static class Ticking {
         public interface Immutable<Self> : Ticking<Self>
             where Self : struct, Immutable<Self>
         {
-            public static abstract void Tick(ref Self self, float dt);
+            static abstract void Tick(ref Self self, float dt);
 
             static void Ticking<Self>
                 .Tick(ref Self self, float dt, Action<Self>? addMore, out bool removeSelf) 
@@ -32,61 +40,59 @@ public static class Thingy {
     public interface Rendering<Self> : Thingy<Self>
         where Self : struct, Rendering<Self>
     {
-        public static abstract void Render(Self self, float dt);
+        static abstract void Render(Self self, float dt);
     }
-}
 
-public partial interface Thingy<Self> {
-    public readonly struct Manager() : IEnumerable<Self> {
-        public readonly List<Self> thingies = [];
-        
-        private static void SwapRemove<T>(List<T> list, int index) {
-            int last = list.Count - 1;
-            list[index] = list[last];
-            list.RemoveAt(last);
-        }
-
-        public static void Tick<Ticking>(Thingy<Ticking>.Manager self, float dt)
-            where Ticking : struct, Thingy.Ticking<Ticking>, Thingy<Self>
-        {
-            List<Ticking> addBuf = [];
-            List<int> remBuf = [];
+    extension<T>(T) where T : struct, Thingy<T>
+    {
+        public static Span<T> AsSpan() => CollectionsMarshal.AsSpan(Thingy<T>.List);
+        public static Span<T> Span => AsSpan<T>();
     
-            var span = CollectionsMarshal.AsSpan(self.thingies);
+        public static ref T Val { get {
+            if (Thingy<T>.List.Count == 0) Thingy<T>.List.Add(default);
+            return ref AsSpan<T>()[0];
+        }}
+
+        public static void Reset() 
+        {
+            T.HandleReset(out bool shouldClear);
+            if (shouldClear) Thingy<T>.List.Clear();
+        }
+    
+        public static void Add(T thingy) 
+        {
+            Thingy<T>.List.Add(thingy);
+        }
+        public static void RemoveAt(int index)
+        {
+            int last = Thingy<T>.List.Count - 1;
+            Thingy<T>.List[index] = Thingy<T>.List[last];
+            Thingy<T>.List.RemoveAt(last);
+        }
+    }
+
+    extension<T>(T) where T : struct, Ticking<T>
+    {
+        public static void TickAll(float dt)
+        {
+            List<T> addBuf = [];
+            List<int> remBuf = [];
+
+            var span = AsSpan<T>();
             for (int i = 0; i < span.Length; i++) {
                 ref var thingy = ref span[i];
-                Ticking.Tick(ref thingy, dt, addBuf.Add, out var removeSelf);
+                T.Tick(ref thingy, dt, addBuf.Add, out var removeSelf);
                 if (removeSelf) remBuf.Add(i);
             }
-            for (int i = remBuf.Count(); i --> 0;) {
-                SwapRemove(self.thingies, remBuf[i]);
-            }
-            foreach (var thingy in addBuf) {
-                self.thingies.Add(thingy);
-            }
+            for (int i = remBuf.Count; i --> 0;) RemoveAt<T>(remBuf[i]);
+            foreach (var thingy in addBuf) Add(thingy);
         }
-
-        public static void Render<Rendering>(Thingy<Rendering>.Manager self, float dt)
-            where Rendering : struct, Thingy.Rendering<Rendering>, Thingy<Self>
+    }
+    extension<T>(T) where T : struct, Rendering<T>
+    {
+        public static void RenderAll(float dt)
         {
-            foreach (var thingy in self.thingies) Rendering.Render(thingy, dt);
-        }
-
-        // sugars
-        public Self this[int index] => this.thingies[index];
-        public int Count() => this.thingies.Count();
-
-        IEnumerator<Self> IEnumerable<Self>.GetEnumerator() => this.thingies.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => this.thingies.GetEnumerator();
-
-        public readonly void Clear() {
-            this.thingies.Clear();
-        }
-        public readonly void Add(Self thingy) {
-            this.thingies.Add(thingy);
-        }
-        public readonly void RemoveAt(int i) {
-            this.thingies.RemoveAt(i);
+            foreach (var thingy in AsSpan<T>()) T.Render(thingy, dt);
         }
     }
 }
