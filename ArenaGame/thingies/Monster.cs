@@ -80,6 +80,7 @@ public partial record struct Monster(
                 color: self.Color,
                 position: bullet.Position,
                 baseSpeed: 1f * Game.TARGET_FPS,
+                speedVariation: 1f * Game.TARGET_FPS,
                 externalVelocity: self.Health > 0
                     ? bullet.Velocity * -0.25f
                     : bullet.Velocity * 0.5f,

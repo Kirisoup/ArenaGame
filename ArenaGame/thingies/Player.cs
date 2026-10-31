@@ -18,7 +18,7 @@ public record struct Player(
     private const int SPEED_LO = 3 * Game.TARGET_FPS;
     private const int SPEED_HI = 6 * Game.TARGET_FPS;
     private const float SHOT_TIME = 0.1f;
-    private static readonly Color COLOR = Color.Red;
+    public static readonly Color COLOR = Color.Red;
     
     public AccuracyStat Accuracy; // property cannot return a reference :(
     public record struct AccuracyStat(int Total, int Hits)
@@ -86,6 +86,17 @@ public record struct Player(
                 Game.Instance.highScore = self.Score;
                 File.WriteAllText(Game.PLAYER_SCORE_FILE, self.Score.ToString());
             }
+
+            Particle.SpawnConfetti(
+                count: 32,
+                color: COLOR,
+                position: self.Position,
+                baseSpeed: 1f * Game.TARGET_FPS,
+                speedVariation: 5f * Game.TARGET_FPS,
+                externalVelocity: new(0, 0),
+                baseLifetime: 0.25f,
+                lifetimeVariation: 2.25f
+            );
 
             break;
         }

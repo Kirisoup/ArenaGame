@@ -49,6 +49,28 @@ public sealed class Game {
         Wave.Reset,
     ];
 
+    public static void FunnyPaticles(float dt)
+    {
+        if (Raylib.IsMouseButtonDown(MouseButton.Left) || 
+            Raylib.IsMouseButtonDown(MouseButton.Right) ||
+            Raylib.IsKeyDown(KeyboardKey.Space)
+        ) {
+            Particle.SpawnConfetti(
+                count: 1,
+                color: Player.COLOR,
+                position: Raylib.GetMousePosition(),
+                baseSpeed: 1f * TARGET_FPS,
+                speedVariation: 1f * TARGET_FPS,
+                externalVelocity: new(0, 3f * TARGET_FPS),
+                baseLifetime: 0.25f,
+                lifetimeVariation: 1.75f
+            );
+        }
+
+        Particle.TickAll(dt);
+        Particle.RenderAll(dt);
+    }
+
     public void Run()
     {
         Instance = this;
@@ -90,6 +112,8 @@ public sealed class Game {
 
             if (this.inTitleScreen)
             {
+                FunnyPaticles(dt);
+
                 const string titleText = "ARENA GAME";
                 var titleTextWidth = Raylib.MeasureText(titleText, 50);
                 Raylib.DrawText(titleText, (Raylib.GetScreenWidth() - titleTextWidth) / 2, (int) (Raylib.GetScreenHeight() * 0.3f), 50, Color.Red);
@@ -101,6 +125,7 @@ public sealed class Game {
                 if (Raylib.IsKeyPressed(KeyboardKey.Enter))
                 {
                     this.inTitleScreen = false;
+                    foreach (var reset in RESET_FNS) reset();
                 }
             }
             else if (!Player.Val.Dead)
@@ -127,6 +152,8 @@ public sealed class Game {
             }
             else
             {
+                FunnyPaticles(dt);
+
                 Raylib.DrawText("Game Over", 10, 10, 30, Color.Red);
                 Raylib.DrawText("Press R to restart", 10, 40, 20, Color.Black);
                 
@@ -137,6 +164,11 @@ public sealed class Game {
 
                 if (Raylib.IsKeyPressed(KeyboardKey.R))
                 {
+                    foreach (var reset in RESET_FNS) reset();
+                }
+                else if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+                {
+                    this.inTitleScreen = true;
                     foreach (var reset in RESET_FNS) reset();
                 }
             }

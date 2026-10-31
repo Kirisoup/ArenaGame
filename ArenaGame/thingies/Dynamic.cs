@@ -42,8 +42,8 @@ public readonly record struct Dynamic(Dynamic.Implementation Impl)
             {
                 var pos = Monster.GetRandomPosOnEdge();
                 var u = Wave.Val.Level + 1 / 2 - 1;
-                var monster = Raylib.GetRandomValue(0, 7) switch {
-                    7 => Monster.ToughOrange(pos),
+                var monster = Raylib.GetRandomValue(0, 8) switch {
+                    >= 7 => Monster.ToughOrange(pos),
                     var n => (n < u) ? Monster.Funny2Hit(pos) : Monster.Goblin(pos),
                 };
                 // Raylib.GetRandomValue(0, 7) == 7 ? Monster.ToughOrange(pos) : Monster.Goblin(pos);

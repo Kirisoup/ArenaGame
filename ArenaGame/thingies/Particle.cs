@@ -30,14 +30,13 @@ public record struct Particle(
 
     public static void SpawnConfetti(
         int count, Color color, Vector2 position,
-        float baseSpeed, Vector2 externalVelocity,
+        float baseSpeed, float speedVariation, Vector2 externalVelocity,
         float baseLifetime, float lifetimeVariation
     ) {
         for (int i = 0; i < count; i++) {
             var angle = Raylib.GetRandomValue(0, 359) * Raylib.DEG2RAD;
             var velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
-            velocity *= 1f + Raylib.GetRandomValue(0, 256) / 256f;
-            velocity *= baseSpeed;
+            velocity *= baseSpeed + Raylib.GetRandomValue(0, 256) / 256f * speedVariation;
             velocity += externalVelocity;
             Particle.Add(new Particle(
                 position,
