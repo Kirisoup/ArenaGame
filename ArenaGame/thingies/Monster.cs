@@ -56,6 +56,10 @@ public partial record struct Monster(
         };
         delta *= self.Speed * dt;
         self.Position += delta;
+
+        removeSelf = removeSelf || self.Position.X < -self.Size / 2.0f || self.Position.X > Raylib.GetScreenWidth()  + self.Size / 2.0f;
+        removeSelf = removeSelf || self.Position.Y < -self.Size / 2.0f || self.Position.Y > Raylib.GetScreenHeight() + self.Size / 2.0f;
+        if (removeSelf) return;
         
         for (int i = 0; i < Bullet.Span.Length; i++)
         {
