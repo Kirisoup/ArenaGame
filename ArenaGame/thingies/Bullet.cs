@@ -29,6 +29,16 @@ public record struct Bullet(
         removeSelf = removeSelf || self.Position.Y < -SIZE / 2.0f || self.Position.Y > Raylib.GetScreenHeight() + SIZE / 2.0f;
         if (removeSelf) {
             Shake.Val.MissedShake(self.Position);
+            Particle.SpawnConfetti(
+                count: 2,
+                color: COLOR,
+                position: self.Position, 
+                baseSpeed: 0f * Game.TARGET_FPS,
+                speedVariation: 1f * Game.TARGET_FPS,
+                externalVelocity: self.Velocity * -0.25f,
+                baseLifetime: 0.25f,
+                lifetimeVariation: 0.75f
+            );
             Player.Val.Combo = 0;
             Player.Val.Accuracy.Total ++;
         }

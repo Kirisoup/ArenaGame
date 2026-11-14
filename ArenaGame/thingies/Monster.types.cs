@@ -33,7 +33,7 @@ public partial record struct Monster
 
     public static Monster ToughOrange(Vector2 position) => new(
         position,
-        Health: 4,
+        Health: 3,
         Size: 32,
         Color.Orange,
         Speed: 2 * Game.TARGET_FPS,
